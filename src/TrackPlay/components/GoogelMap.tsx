@@ -355,38 +355,19 @@ const GoogleMap: React.FC = () => {
   }
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div className="relative w-full h-full">
       {/* Filter Panel */}
-      <div style={{ 
-        position: "absolute", 
-        top: "10px", 
-        left: "10px", 
-        zIndex: 1000,
-        backgroundColor: "white",
-        padding: "15px",
-        borderRadius: "5px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        width: "300px"
-      }}>
-        <h3 style={{ margin: "0 0 15px 0", fontSize: "16px" }}>Track Filters</h3>
+      <div className="absolute top-2.5 left-2.5 z-10 bg-white p-4 rounded shadow-md w-72">
+        <h3 className="m-0 mb-4 text-base font-medium">Track Filters</h3>
         
         {/* IMEI Dropdown */}
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>
+        <div className="mb-4">
+          <label className="block mb-1 text-sm">
             Device IMEI:
           </label>
-          <div style={{ position: "relative" }}>
+          <div className="relative">
             <div 
-              style={{ 
-                border: "1px solid #ccc", 
-                padding: "8px", 
-                borderRadius: "4px",
-                cursor: "pointer",
-                backgroundColor: "#fff",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
+              className="border border-gray-300 p-2 rounded cursor-pointer bg-white flex justify-between items-center"
               onClick={() => setShowImeiDropdown(!showImeiDropdown)}
             >
               <span>{selectedImei}</span>
@@ -394,49 +375,25 @@ const GoogleMap: React.FC = () => {
             </div>
             
             {showImeiDropdown && (
-              <div style={{ 
-                position: "absolute", 
-                top: "100%", 
-                left: 0, 
-                right: 0, 
-                border: "1px solid #ccc",
-                borderTop: "none",
-                borderRadius: "0 0 4px 4px",
-                backgroundColor: "#fff",
-                maxHeight: "200px",
-                overflowY: "auto",
-                zIndex: 1001,
-                boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
-              }}>
+              <div className="absolute top-full left-0 right-0 border border-gray-300 border-t-0 rounded-b bg-white max-h-48 overflow-y-auto z-20 shadow-lg">
                 <input
                   type="text"
                   placeholder="Search IMEI..."
                   value={searchQuery}
                   onChange={handleSearch}
                   onClick={(e) => e.stopPropagation()}
-                  style={{ 
-                    width: "calc(100% - 16px)", 
-                    padding: "8px",
-                    border: "none",
-                    borderBottom: "1px solid #eee",
-                    outline: "none"
-                  }}
+                  className="w-full p-2 border-0 border-b border-gray-200 outline-none"
                 />
                 
                 {filteredImeiList.length === 0 ? (
-                  <div style={{ padding: "8px", color: "#999", textAlign: "center" }}>
+                  <div className="p-2 text-gray-500 text-center">
                     No IMEI found
                   </div>
                 ) : (
                   filteredImeiList.map((imei) => (
                     <div 
                       key={imei.value}
-                      style={{ 
-                        padding: "8px", 
-                        cursor: "pointer",
-                        borderBottom: "1px solid #eee",
-                        backgroundColor: selectedImei === imei.value ? "#f0f9ff" : "transparent"
-                      }}
+                      className={`p-2 cursor-pointer border-b border-gray-100 hover:bg-gray-50 ${selectedImei === imei.value ? 'bg-blue-50' : ''}`}
                       onClick={() => handleImeiSelect(imei.value)}
                     >
                       {imei.label}
@@ -449,53 +406,33 @@ const GoogleMap: React.FC = () => {
         </div>
         
         {/* Date Time Pickers */}
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>
+        <div className="mb-4">
+          <label className="block mb-1 text-sm">
             Start Date (IST):
           </label>
           <input
             type="datetime-local"
             value={formatDateForInput(startDate)}
             onChange={(e) => setStartDate(e.target.value)}
-            style={{ 
-              width: "100%", 
-              padding: "8px", 
-              border: "1px solid #ccc",
-              borderRadius: "4px"
-            }}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>
+        <div className="mb-4">
+          <label className="block mb-1 text-sm">
             End Date (IST):
           </label>
           <input
             type="datetime-local"
             value={formatDateForInput(endDate)}
             onChange={(e) => setEndDate(e.target.value)}
-            style={{ 
-              width: "100%", 
-              padding: "8px", 
-              border: "1px solid #ccc",
-              borderRadius: "4px"
-            }}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         
         <button
           onClick={fetchTrackData}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: "bold"
-          }}
+          className="w-full py-2.5 bg-green-500 text-white border-0 rounded cursor-pointer text-sm font-medium hover:bg-green-600 transition-colors"
         >
           Load Track Data
         </button>
@@ -503,129 +440,58 @@ const GoogleMap: React.FC = () => {
       
       {/* Loading Overlay */}
       {loading && (
-        <div style={{ 
-          position: "absolute", 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          display: "flex", 
-          justifyContent: "center", 
-          alignItems: "center",
-          backgroundColor: "rgba(255, 255, 255, 0.7)",
-          zIndex: 1000
-        }}>
-          <div style={{
-            padding: "20px",
-            backgroundColor: "white",
-            borderRadius: "5px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-          }}>Loading track data...</div>
+        <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-70 z-10">
+          <div className="p-5 bg-white rounded shadow-md">
+            Loading track data...
+          </div>
         </div>
       )}
       
       {/* Error Messages */}
       {error && (
-        <div style={{ 
-          position: "absolute", 
-          top: 10, 
-          left: "50%", 
-          transform: "translateX(-50%)",
-          backgroundColor: "#f8d7da",
-          color: "#721c24",
-          padding: "10px 20px",
-          borderRadius: "5px",
-          zIndex: 1000,
-          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
-        }}>
+        <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 p-2.5 px-5 rounded shadow-md z-10">
           {error}
         </div>
       )}
       
       {/* Map Container */}
-      <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+      <div ref={mapRef} className="w-full h-full" />
       
       {/* Playback Controls */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: "10px",
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          padding: "10px",
-          borderRadius: "5px",
-          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
-        }}
-      >
+      <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex gap-2.5 bg-white bg-opacity-80 p-2.5 rounded shadow-md">
         <button
           onClick={handlePlayPause}
           disabled={!polyline || loading}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: isPlaying ? "#FF9800" : "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: polyline && !loading ? "pointer" : "not-allowed",
-            opacity: polyline && !loading ? 1 : 0.7,
-          }}
+          className={`px-5 py-2.5 text-base text-white border-0 rounded ${
+            isPlaying ? 'bg-orange-500' : 'bg-green-500'
+          } ${(!polyline || loading) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'}`}
         >
           {isPlaying ? "Pause" : "Play"}
         </button>
         <button
           onClick={handleReset}
           disabled={!polyline || loading}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#f44336",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: polyline && !loading ? "pointer" : "not-allowed",
-            opacity: polyline && !loading ? 1 : 0.7,
-          }}
+          className={`px-5 py-2.5 text-base bg-red-500 text-white border-0 rounded ${
+            (!polyline || loading) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'
+          }`}
         >
           Reset
         </button>
         
         {/* Speed controls */}
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center",
-          gap: "10px",
-          marginLeft: "10px",
-          backgroundColor: "#f0f0f0",
-          padding: "5px 10px",
-          borderRadius: "5px"
-        }}>
+        <div className="flex items-center gap-2.5 ml-2.5 bg-gray-100 px-2.5 py-1 rounded">
           <button
             onClick={handleSpeedDecrease}
             disabled={!polyline || loading}
             title="Decrease speed"
-            style={{
-              padding: "5px 10px",
-              fontSize: "16px",
-              backgroundColor: "#2196F3",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: polyline && !loading ? "pointer" : "not-allowed",
-              opacity: polyline && !loading ? 1 : 0.7,
-            }}
+            className={`px-2.5 py-1 text-base bg-blue-500 text-white border-0 rounded ${
+              (!polyline || loading) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'
+            }`}
           >
             -
           </button>
           
-          <div style={{ 
-            minWidth: "90px", 
-            textAlign: "center",
-            fontWeight: "bold"
-          }}>
+          <div className="min-w-[90px] text-center font-medium">
             {getSpeedLabel()}
           </div>
           
@@ -633,16 +499,9 @@ const GoogleMap: React.FC = () => {
             onClick={handleSpeedIncrease}
             disabled={!polyline || loading || animationSpeed <= 5}
             title="Increase speed"
-            style={{
-              padding: "5px 10px",
-              fontSize: "16px",
-              backgroundColor: "#2196F3",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: polyline && !loading && animationSpeed > 5 ? "pointer" : "not-allowed",
-              opacity: polyline && !loading && animationSpeed > 5 ? 1 : 0.7,
-            }}
+            className={`px-2.5 py-1 text-base bg-blue-500 text-white border-0 rounded ${
+              (!polyline || loading || animationSpeed <= 5) ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:opacity-90 transition-opacity'
+            }`}
           >
             +
           </button>
@@ -650,37 +509,14 @@ const GoogleMap: React.FC = () => {
       </div>
       
       {/* Legend */}
-      <div style={{
-        position: "absolute",
-        bottom: "20px",
-        right: "20px",
-        backgroundColor: "white",
-        padding: "10px",
-        borderRadius: "5px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-        fontSize: "12px"
-      }}>
-        <div style={{ marginBottom: "5px", display: "flex", alignItems: "center" }}>
-          <div style={{ 
-            width: "12px", 
-            height: "12px", 
-            backgroundColor: "#4CAF50", 
-            borderRadius: "50%",
-            marginRight: "5px",
-            border: "1px solid white"
-          }}></div>
-          Start Point
+      <div className="absolute bottom-5 right-5 bg-white p-2.5 rounded shadow-md text-xs">
+        <div className="mb-1 flex items-center">
+          <div className="w-3 h-3 bg-green-500 rounded-full mr-1 border border-white"></div>
+          <span>Start Point</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ 
-            width: "12px", 
-            height: "12px", 
-            backgroundColor: "#f44336", 
-            borderRadius: "50%",
-            marginRight: "5px",
-            border: "1px solid white"
-          }}></div>
-          End Point
+        <div className="flex items-center">
+          <div className="w-3 h-3 bg-red-500 rounded-full mr-1 border border-white"></div>
+          <span>End Point</span>
         </div>
       </div>
     </div>
