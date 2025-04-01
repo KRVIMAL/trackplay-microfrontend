@@ -2,14 +2,16 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Loader } from "@googlemaps/js-api-loader"
 import axios from "axios"
+import { useParams } from "react-router-dom"
 
 const GOOGLE_MAPS_API_KEY: any = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const BASE_URL = "http://localhost:3000"
+const BASE_URL = "http://localhost:8096"
+const TRIP_API_URL = "http://localhost:9099/trip"
 
 // Sample IMEI list for dropdown - replace with your actual data source
 const SAMPLE_IMEI_LIST = [
-  { value: "700070635323", label: "Device 700070635323" },
-  { value: "700070635324", label: "Device 700070635324" },
+  { value: "937066763492", label: "Device 937066763492" },
+  { value: "937066763492", label: "Device 937066763492" },
   { value: "700070635325", label: "Device 700070635325" },
   { value: "700070635326", label: "Device 700070635326" },
   { value: "800070635323", label: "Device 800070635323" },
@@ -39,7 +41,32 @@ interface IMEIOption {
   label: string
 }
 
+interface TripResponse {
+  success: boolean
+  statusCode: number
+  message: string
+  data: {
+    _id: string
+    tripId: string
+    vehicleDetails: {
+      vehicleNumber: {
+        device: {
+          imei: string
+        }
+      }
+    }
+    tripDetails: {
+      tripExpectedStartDate: number
+      tripExpectedEndDate: number
+    }
+  }
+}
+
 const GoogleMap: React.FC = () => {
+  const params = useParams()
+  console.log({params})
+  const tripId = params.tripId // Get tripId from URL params
+  console.log({tripId})
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [polyline, setPolyline] = useState<google.maps.Polyline | null>(null)
@@ -54,32 +81,85 @@ const GoogleMap: React.FC = () => {
   const [animationSpeed, setAnimationSpeed] = useState<number>(20) // Default animation interval in ms
   
   // Filter inputs
-  const [selectedImei, setSelectedImei] = useState<string>("700070635323")
+  const [selectedImei, setSelectedImei] = useState<string>("937066763492")
   const [startDate, setStartDate] = useState<string>("2025-03-18T10:07:58Z")
   const [endDate, setEndDate] = useState<string>("2025-03-18T10:08:57Z")
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [showImeiDropdown, setShowImeiDropdown] = useState<boolean>(false)
+  const [tripDataLoaded, setTripDataLoaded] = useState<boolean>(false)
 
-  // Filter the IMEI list based on search query
   const filteredImeiList = SAMPLE_IMEI_LIST.filter(imei => 
     imei.label.toLowerCase().includes(searchQuery.toLowerCase()) || 
     imei.value.includes(searchQuery)
   )
 
-  // Convert local time to UTC
-  const convertToUTC = (localDateTimeStr: string): string => {
-    if (!localDateTimeStr) return "";
+  const convertTimestampToISOString = (timestamp: number): string => {
+    const date = new Date(timestamp);
     
-    const localDate = new Date(localDateTimeStr);
-    const year = localDate.getUTCFullYear();
-    const month = String(localDate.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(localDate.getUTCDate()).padStart(2, '0');
-    const hours = String(localDate.getUTCHours()).padStart(2, '0');
-    const minutes = String(localDate.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(localDate.getUTCSeconds()).padStart(2, '0');
+    const istOffsetHours = 5;
+    const istOffsetMinutes = 30;
     
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
+    date.setUTCHours(date.getUTCHours() + istOffsetHours);
+    date.setUTCMinutes(date.getUTCMinutes() + istOffsetMinutes);
+    
+    return date.toISOString().slice(0, -1);
   }
+
+const convertToIST = (localDateTimeStr: string): string => {
+  if (!localDateTimeStr) return "";
+  
+  const localDate = new Date(localDateTimeStr);
+  
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const hours = String(localDate.getHours()).padStart(2, '0');
+  const minutes = String(localDate.getMinutes()).padStart(2, '0');
+  const seconds = String(localDate.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
+  useEffect(() => {
+    const fetchTripData = async () => {
+      if (!tripId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response:any = await axios.get<any>(`${TRIP_API_URL}/${tripId}`);
+        if (response.data.success&& response.data.data) {
+          const { vehicleDetails, tripDetails } = response.data.data;
+          const imei = vehicleDetails.vehicleNumber.device.imei;
+          const startDateISO = convertTimestampToISOString(tripDetails.tripExpectedStartDate);
+          const endDateISO = convertTimestampToISOString(tripDetails.tripExpectedEndDate);
+       
+          setSelectedImei(imei);
+          setStartDate(startDateISO);
+          setEndDate(endDateISO);
+          setTripDataLoaded(true);
+        } else {
+          setError("Failed to fetch trip data");
+        }
+      } catch (err) {
+        setError(`Error fetching trip data: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        console.error("Error fetching trip data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTripData();
+  }, [tripId]);
+
+  // Auto fetch track data after trip data is loaded
+  useEffect(() => {
+    if (tripDataLoaded && tripId) {
+      fetchTrackData();
+      setTripDataLoaded(false); // Reset to prevent multiple calls
+    }
+  }, [tripDataLoaded]);
 
   const fetchTrackData = async () => {
     if (!selectedImei || !startDate || !endDate) {
@@ -100,15 +180,15 @@ const GoogleMap: React.FC = () => {
     
     try {
       // Convert local times to UTC for API request
-      const utcStartDate = convertToUTC(startDate);
-      const utcEndDate = convertToUTC(endDate);
+      const istStartDate = convertToIST(startDate);
+      const istEndDate = convertToIST(endDate);
       
       const response = await axios.get<TrackDataResponse>(
         `${BASE_URL}/trackdata`,
         {
           params: {
-            startDate: utcStartDate,
-            endDate: utcEndDate,
+            startDate: istStartDate,
+            endDate: istEndDate,
             imei: selectedImei
           },
           headers: {
